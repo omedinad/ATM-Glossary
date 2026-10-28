@@ -38,8 +38,8 @@ repository. Missing or invalid private input fails the private build. Replace
 targets: generic `assembleRelease` / `assembleDebug` build **both** editions.
 
 Release APKs go to `app/build/outputs/apk/public/release/` or `private/release/`.
-Signed files are named `ATM-Glossary_v1.7.2.apk` and
-`ATM-Glossary-Private_v1.7.2.apk`; the version follows `versionName` in `app/build.gradle`.
+Signed files are named `ATM-Glossary_v1.0.0.apk` and
+`ATM-Glossary-Private_v1.0.0.apk`; the version follows `versionName` in `app/build.gradle`.
 Set `ATM_KEYSTORE`, `ATM_STORE_PASSWORD`, `ATM_KEY_ALIAS` and `ATM_KEY_PASSWORD` for
 release signing, keeping credentials outside Git. Without them, filenames have an
 `-unsigned` suffix and the APKs cannot be installed. Debug APKs have a `-debug` suffix.
