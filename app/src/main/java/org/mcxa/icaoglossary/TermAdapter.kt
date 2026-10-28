@@ -10,13 +10,17 @@ import org.mcxa.icaoglossary.databinding.TermItemBinding
 
 class TermAdapter(private val onSelect: (Term) -> Unit) : ListAdapter<Term, TermAdapter.Holder>(
     object : DiffUtil.ItemCallback<Term>() {
+        /** Recognizes the same glossary entry by its stable ID. */
         override fun areItemsTheSame(oldItem: Term, newItem: Term) = oldItem.id == newItem.id
+        /** Checks every term field to decide whether its row needs updating. */
         override fun areContentsTheSame(oldItem: Term, newItem: Term) = oldItem == newItem
     }
 ) {
     class Holder(val binding: TermItemBinding) : RecyclerView.ViewHolder(binding.root)
+    /** Inflates the XML layout for a search-result row. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(
         TermItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    /** Displays the term, favourite marker, and source summary, and connects the selection action. */
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val term = getItem(position)
         val title = term.abbreviation.ifBlank { term.meaning }

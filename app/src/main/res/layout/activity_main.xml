@@ -9,5 +9,6 @@
     </LinearLayout>
     <androidx.appcompat.widget.SwitchCompat android:id="@+id/favourites" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/favourites_only" />
     <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:accessibilityLiveRegion="polite" android:text="@string/loading" />
+    <ProgressBar android:id="@+id/loadingProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:indeterminate="true" android:indeterminateTint="?attr/colorAccent" android:importantForAccessibility="no" />
     <androidx.recyclerview.widget.RecyclerView android:id="@+id/results" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="16dp" android:scrollbars="vertical" />
 </LinearLayout>

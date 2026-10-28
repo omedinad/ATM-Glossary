@@ -1,3 +1,4 @@
+# Local Gradle and Android Studio state
 .gradle/
 **/build/
 local.properties
@@ -5,12 +6,20 @@ local.properties
 *.iml
 .DS_Store
 .kotlin/
+
+# Python cache and local environment
 __pycache__/
 *.pyc
+.venv/
 
+# Signing keys and local credentials
 *.keystore
 *.jks
 keystore.properties
+.env
+.env.*
+
+# Generated packages, databases, logs, and archives
 *.apk
 *.aab
 *.db
@@ -19,7 +28,12 @@ keystore.properties
 *.db-shm
 *.log
 *.zip
-.venv/
-.env
-.env.*
+
+# Private reference material rejected by tools/check_public.py
+*.pdf
+*.xlsx
+provenance/
+downloads/
+
+# Only the root private folder; app/src/private contains required flavour code.
 /private/

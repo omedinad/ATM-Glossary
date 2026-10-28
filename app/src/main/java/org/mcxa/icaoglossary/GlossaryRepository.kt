@@ -19,7 +19,7 @@ data class GlossaryInfo(val title: String, val version: String, val count: Int,
                         val sources: List<SourceCatalog.Source> = emptyList(), val collectionId: String = "")
 data class SearchResult(val terms: List<Term>, val more: Boolean)
 
-// All activity instances use DatabaseWorker, including initialization and close().
+/** Manages glossary data and personal changes. Call its methods on [DatabaseWorker]'s shared executor. */
 class GlossaryRepository(private val context: Context) : AutoCloseable {
     private var cachedInfo: GlossaryInfo? = null
     private var cachedAliases: Map<String, String> = emptyMap()
@@ -28,14 +28,18 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
     private val prefs = context.getSharedPreferences("glossary", Context.MODE_PRIVATE)
     private var personalName = "personal.db"
     private var personal = createPersonal(personalName)
+    /** Creates a helper for the named database of favourites and personal edits. */
     private fun createPersonal(name: String) = object : SQLiteOpenHelper(context, name, null, 2) {
+        /** Creates the favourites and edits tables for a new personal database. */
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL("CREATE TABLE favourites (entry_id TEXT PRIMARY KEY)")
             createEdits(db)
         }
+        /** Adds edit storage to personal databases that previously held only favourites. */
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             if (oldVersion < 2) createEdits(db)
         }
+        /** Creates storage for personal term changes, citations, and removal markers. */
         private fun createEdits(db: SQLiteDatabase) {
             db.execSQL("""CREATE TABLE edits (
                 id TEXT PRIMARY KEY, abbreviation TEXT NOT NULL, meaning TEXT NOT NULL,
@@ -47,6 +51,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
     }
     private val searchSql by lazy { context.assets.open("search.sql").bufferedReader().use { it.readText() } }
 
+    /** Loads and validates the active glossary, updating the bundled copy unless an import is active. */
     fun initialize() {
         destination.parentFile?.mkdirs()
         val bundledHash = context.assets.open("glossary.db").use { input ->
@@ -67,9 +72,11 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         }
     }
 
+    /** Opens [file] for reading; the caller must close the returned connection. */
     private fun open(file: File = destination): SQLiteDatabase =
         SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
 
+    /** Checks database integrity, schema, entries, and aliases without changing the active glossary. */
     private fun validate(file: File): ValidatedGlossary = open(file).use { db ->
         require(db.version == 1) { "Unsupported glossary schema; use build_glossary.py." }
         db.rawQuery("PRAGMA quick_check", null).use { c ->
@@ -128,6 +135,10 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         }
     }
 
+    /**
+     * Activates validated glossary metadata and its personal store, migrating edits for retired IDs.
+     * If [replacement] is supplied, replaces the base file and attempts rollback on failure.
+     */
     private fun publish(validated: ValidatedGlossary, replacement: File? = null) {
         // Old databases retain their existing personal.db. New collections use stable,
         // separate stores, so private edits never appear in the public starter.
@@ -190,6 +201,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         cachedAliases = validated.aliases
     }
 
+    /** Returns whether [id] has a personal edit or removal marker in [db]. */
     private fun hasEdit(db: SQLiteDatabase, id: String): Boolean =
         db.rawQuery("SELECT 1 FROM edits WHERE id=?", arrayOf(id)).use { it.moveToFirst() }
 
@@ -202,6 +214,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         FROM personal.edits WHERE deleted=0
     ) """
 
+    /** Opens the base glossary with its personal store attached for merged queries; the caller must close it. */
     private fun openEffective(): SQLiteDatabase {
         personal.readableDatabase // Ensure creation/migration before attaching.
         val db = open()
@@ -211,6 +224,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         } catch (e: Exception) { db.close(); throw e }
     }
 
+    /** Recounts visible terms, including personal changes, and updates the cached About information. */
     private fun refreshCount() {
         val count = openEffective().use { db ->
             db.rawQuery(effectiveEntries + "SELECT count(*) FROM entries", null).use { it.moveToFirst(); it.getInt(0) }
@@ -218,6 +232,10 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         cachedInfo = checkNotNull(cachedInfo).copy(count = count)
     }
 
+    /**
+     * Validates and saves a personal edit, or adds a term when [original] is null, returning its ID.
+     * Keeps the original sources, adds the personal citation, and refreshes the cached term count.
+     */
     fun saveEdit(original: Term?, abbreviation: String, meaning: String, notes: String, citation: String): String {
         require(meaning.isNotBlank()) { "Enter a meaning." }
         require(listOf(abbreviation, meaning, notes, citation).all { it.length <= 100000 && '\u0000' !in it }) {
@@ -252,6 +270,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         return id
     }
 
+    /** Hides [term] through a reversible personal removal marker and refreshes the cached count. */
     fun removeTerm(term: Term) {
         if (!hasEdit(personal.writableDatabase, term.id))
             saveEdit(term, term.abbreviation, term.meaning, term.notes, term.citation)
@@ -259,6 +278,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         refreshCount()
     }
 
+    /** Discards the personal change for [id], revealing its base entry or deleting a personal addition. */
     fun restoreTerm(id: String) {
         val hidden = personal.readableDatabase.rawQuery("SELECT deleted FROM edits WHERE id=?", arrayOf(id)).use {
             it.moveToFirst() && it.getInt(0) != 0
@@ -269,6 +289,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         refreshCount()
     }
 
+    /** Makes a removed term visible again, keeping its edits and enforcing the term limit. */
     fun undoRemoval(id: String) {
         val hidden = personal.readableDatabase.rawQuery("SELECT deleted FROM edits WHERE id=?", arrayOf(id)).use {
             it.moveToFirst() && it.getInt(0) != 0
@@ -278,6 +299,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         refreshCount()
     }
 
+    /** Returns the active collection's personal additions, edits, and removals with favourite flags. */
     fun personalChanges(): List<Term> {
         val saved = savedIds()
         return personal.readableDatabase.rawQuery(
@@ -290,7 +312,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         }
     }
 
-    // Export a standalone, import-compatible snapshot. Favourites remain private to the device.
+    /** Exports visible terms and citations as an importable database; favourites stay on the device. */
     fun exportDatabase(uri: Uri) {
         val temp = File.createTempFile("export-", ".db", context.cacheDir)
         try {
@@ -309,6 +331,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
                             }
                         }
                     }
+                    /** Adds or replaces one metadata value in the exported database. */
                     fun metadata(key: String, value: String) {
                         db.insertWithOnConflict("metadata", null, ContentValues().apply { put("key", key); put("value", value) }, SQLiteDatabase.CONFLICT_REPLACE)
                     }
@@ -328,11 +351,13 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         } finally { temp.delete() }
     }
 
+    /** Validates a temporary glossary before installing it as the active database. */
     private fun replace(temp: File) {
         val validatedInfo = validate(temp)
         publish(validatedInfo, temp)
     }
 
+    /** Installs the bundled glossary and records its optional [hash] for future update checks. */
     private fun installBundle(hash: String? = null) {
         val temp = File.createTempFile("bundle-", ".db", destination.parentFile)
         try {
@@ -345,8 +370,10 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         } finally { temp.delete() }
     }
 
+    /** Switches to the app's bundled glossary, retaining each collection's personal changes. */
     fun useBundled() { installBundle() }
 
+    /** Imports a validated database up to 64 MiB and keeps it active across bundled glossary updates. */
     fun importDatabase(uri: Uri) {
         val temp = File.createTempFile("import-", ".db", destination.parentFile)
         try {
@@ -368,9 +395,10 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         } finally { temp.delete() }
     }
 
-    // No disk access: initialized once and refreshed when the active database changes.
+    /** Returns cached glossary details and the visible term count without disk access; requires initialization. */
     fun info(): GlossaryInfo = checkNotNull(cachedInfo) { "Initialize the glossary first." }
 
+    /** Toggles [term]'s saved state, also clearing retired IDs when removing a favourite. */
     fun toggleFavourite(term: Term) {
         val db = personal.writableDatabase
         if (term.favourite) {
@@ -382,6 +410,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         }, SQLiteDatabase.CONFLICT_IGNORE)
     }
 
+    /** Returns saved IDs plus the current IDs of any favourites whose IDs were retired. */
     private fun savedIds(): Set<String> {
         val saved = hashSetOf<String>()
         personal.readableDatabase.rawQuery("SELECT entry_id FROM favourites", null).use { c ->
@@ -391,6 +420,10 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         return saved
     }
 
+    /**
+     * Finds visible terms by acronym or meaning, ignoring case and accents and ranking exact acronyms first.
+     * Applies [favouritesOnly] before the 200-result limit and flags when more matches exist.
+     */
     fun search(query: String, favouritesOnly: Boolean): SearchResult {
         val saved = savedIds()
         val q = normalize(query)
@@ -411,9 +444,11 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         return SearchResult(terms.take(200), terms.size > 200)
     }
 
+    /** Closes the personal database helper and clears cached glossary metadata and aliases. */
     override fun close() { personal.close(); cachedInfo = null; cachedAliases = emptyMap() }
 
     companion object {
+        /** Trims text, removes accent marks, and lowercases it using the database builder's search rules. */
         fun normalize(value: String): String = Normalizer.normalize(value.trim(), Normalizer.Form.NFD)
             .replace(Regex("\\p{Mn}+"), "").lowercase(Locale.ROOT)
     }

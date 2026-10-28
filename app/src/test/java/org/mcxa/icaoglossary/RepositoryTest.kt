@@ -23,6 +23,7 @@ class RepositoryTest {
     private lateinit var bundledInfo: GlossaryInfo
     private var sequence = 0
 
+    /** Creates and imports a synthetic glossary with repeated acronyms, accents, and a retired ID. */
     @Before fun setup() {
         context = RuntimeEnvironment.getApplication()
         repo = GlossaryRepository(context)
@@ -46,20 +47,26 @@ class RepositoryTest {
         }
         repo.importDatabase(Uri.fromFile(fixture))
     }
+    /** Closes the repository after each test. */
     @After fun cleanup() { repo.close() }
+    /** Finds the fixture's air traffic control entry among the distinct ATC meanings. */
     private fun term() = repo.search("ATC", false).terms.single { it.id == "term-atc" }
+    /** Copies the fixture to a fresh file and applies any requested database changes. */
     private fun copyFixture(action: (SQLiteDatabase) -> Unit = {}): File {
         val file = File(context.cacheDir, "copy-${sequence++}.db")
         fixture.copyTo(file)
         SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READWRITE).use(action)
         return file
     }
+    /** Builds a fixture update with a revised ATC meaning and dataset version. */
     private fun updatedDatabase() = copyFixture {
         it.execSQL("UPDATE entries SET meaning='Updated control', meaning_search='updated control' WHERE id='term-atc'")
         it.execSQL("UPDATE metadata SET value='fixture-v2' WHERE key='dataset_version'")
     }
+    /** Imports a test database through the same URI-based entry point used by the app. */
     private fun import(file: File) = repo.importDatabase(Uri.fromFile(file))
 
+    /** Checks that About details remain available from cache even when the database file is hidden. */
     @Test fun aboutInfoAndSourcesAreCachedWithoutReadingDatabase() {
         val expected = repo.info()
         assertEquals("Test source", expected.sources.single().label)
@@ -68,6 +75,7 @@ class RepositoryTest {
         assertTrue(file.renameTo(hidden))
         try { repeat(3) { assertSame(expected, repo.info()) } } finally { assertTrue(hidden.renameTo(file)) }
     }
+    /** Checks that imports and switching to the bundle refresh the cached count and source metadata. */
     @Test fun countAndSourceMetadataFollowActiveCollection() {
         val count = repo.info().count
         import(copyFixture {
@@ -80,17 +88,20 @@ class RepositoryTest {
         repo.useBundled()
         assertEquals(bundledInfo,repo.info())
     }
+    /** Checks case/accent matching, distinct meanings, literal query handling, and the result-limit flag. */
     @Test fun searchesAreNormalizedAndKeepDistinctMeanings() {
         assertEquals(2,repo.search("atc",false).terms.size)
         assertEquals("term-cafe",repo.search("cafe",false).terms.single().id)
         assertTrue(repo.search("' OR 1=1 --",false).terms.isEmpty())
         assertTrue(repo.search("",false).more)
     }
+    /** Checks that the result limit does not hide favourites outside the first page of all terms. */
     @Test fun favouritesBeyondFirstTwoHundredAreFound() {
         val term = repo.search("ZZ99",false).terms.single()
         repo.toggleFavourite(term)
         assertEquals(term.id,repo.search("",true).terms.single().id)
     }
+    /** Checks that a favourite saved under a retired ID resolves to the current term and can be removed. */
     @Test fun retiredFavouriteIdsResolveAndCanBeRemoved() {
         repo.toggleFavourite(term().copy(id="retired-atc"))
         val saved = repo.search("",true).terms.single()
@@ -98,6 +109,7 @@ class RepositoryTest {
         repo.toggleFavourite(saved)
         assertTrue(repo.search("",true).terms.isEmpty())
     }
+    /** Checks that imported updates and favourites persist after reopening the repository. */
     @Test fun importsAndFavouritesSurviveReopening() {
         repo.toggleFavourite(term()); import(updatedDatabase())
         repo.close(); repo=GlossaryRepository(context); repo.initialize()
@@ -106,6 +118,7 @@ class RepositoryTest {
         import(fixture)
         assertEquals("Air traffic control",repo.search("",true).terms.single().meaning)
     }
+    /** Checks that malformed imports leave the active terms and cached metadata unchanged. */
     @Test fun invalidImportsPreserveDatabaseAndCache() {
         val before=repo.info()
         val invalid = listOf(
@@ -125,6 +138,7 @@ class RepositoryTest {
             assertEquals("Air traffic control",term().meaning)
         }
     }
+    /** Checks that failure to prepare a collection's personal store preserves the active glossary. */
     @Test fun personalStoreFailureDoesNotReplaceActiveGlossary() {
         val before=repo.info()
         val collection="broken-personal-store"
@@ -145,6 +159,7 @@ class RepositoryTest {
         repo.close();repo=GlossaryRepository(context);repo.initialize()
         assertEquals(before,repo.info())
     }
+    /** Checks that personal edits survive reopening and glossary updates while retaining original sources. */
     @Test fun personalEditsPersistAcrossUpdatesAndRetainSources() {
         val original=term();val count=repo.info().count
         repo.toggleFavourite(original)
@@ -161,6 +176,7 @@ class RepositoryTest {
         repo.restoreTerm(original.id)
         assertEquals("Updated control",repo.search("",true).terms.single().meaning)
     }
+    /** Checks that switching collections keeps their personal data separate and restores it on return. */
     @Test fun personalEditsAndFavouritesStayWithTheirCollection() {
         repo.toggleFavourite(term())
         repo.saveEdit(term(),"LOCALONLYTEST","Private test meaning","","Notebook")
@@ -178,6 +194,7 @@ class RepositoryTest {
         assertEquals(2,repo.personalChanges().size)
         assertEquals("LOCALONLYTEST",repo.search("",true).terms.single().abbreviation)
     }
+    /** Checks that every personal add, removal, undo, and reset updates the cached visible-term count. */
     @Test fun addRemoveRestoreAndResetRefreshCount() {
         val count=repo.info().count
         val id=repo.saveEdit(null,"NEWTERM","Added test term","","")
@@ -189,6 +206,7 @@ class RepositoryTest {
         repo.removeTerm(term());assertEquals(count-1,repo.info().count)
         repo.restoreTerm("term-atc");assertEquals(count,repo.info().count)
     }
+    /** Checks that importing ID aliases moves personal edits and favourites to the current term. */
     @Test fun editsAndFavouritesFollowRetiredIds() {
         import(copyFixture {
             it.execSQL("DELETE FROM metadata WHERE key='entry_aliases'")
@@ -200,6 +218,7 @@ class RepositoryTest {
         val current=repo.search("",true).terms.single()
         assertEquals("term-atc",current.id);assertEquals("Personal revised example",current.meaning)
     }
+    /** Checks that export and reimport preserve citations, collection identity, additions, edits, and removals. */
     @Test fun exportRoundtripPreservesSourceMetadataAndChanges() {
         val count=repo.info().count
         repo.saveEdit(term(),"ATC","Exported test meaning","Export note","Reference")
@@ -216,11 +235,13 @@ class RepositoryTest {
         assertEquals("Exported test meaning",term().meaning)
         assertTrue(repo.search("CAFE",false).terms.isEmpty())
     }
+    /** Checks that blank meanings and NUL characters are rejected without changing the original term. */
     @Test fun invalidEditDoesNotReplaceText() {
         assertTrue(runCatching { repo.saveEdit(term(),"ATC"," ","","") }.isFailure)
         assertTrue(runCatching { repo.saveEdit(term(),"ATC","NUL\u0000","","") }.isFailure)
         assertTrue(repo.personalChanges().isEmpty());assertEquals("Air traffic control",term().meaning)
     }
+    /** Checks that restoring or editing a removed term cannot bypass the 100,000-term limit. */
     @Test fun restoringHiddenTermsCannotExceedTheExportableLimit() {
         repo.removeTerm(term())
         val full=copyFixture { db ->
@@ -240,6 +261,7 @@ class RepositoryTest {
         assertEquals(100000,repo.info().count)
         assertTrue(repo.personalChanges().single { it.id==hidden.id }.deleted)
     }
+    /** Checks that databases without a collection ID keep their legacy favourites and personal edits. */
     @Test fun legacyDatabaseKeepsExistingFavouritesAndEdits() {
         val legacy=copyFixture { it.execSQL("DELETE FROM metadata WHERE key IN ('collection_id','sources')") }
         repo.close()
@@ -255,6 +277,7 @@ class RepositoryTest {
         import(fixture);assertTrue(repo.personalChanges().isEmpty())
         import(legacy);assertEquals("Legacy edit",repo.search("",true).terms.single().meaning)
     }
+    /** Checks that a bundled glossary update does not replace an imported collection or its edits. */
     @Test fun importedCollectionSurvivesNewBundleHash() {
         repo.saveEdit(term(),"MYTERM","Personal test entry","","")
         context.getSharedPreferences("glossary",Context.MODE_PRIVATE).edit().putString("bundleHash","old-bundle").commit()

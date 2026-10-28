@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         if (uri != null) { pendingFile = uri to true; consumePendingFile() }
     }
 
+    /** Sets up the screen, restores saved UI state, and loads the glossary in the background. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -82,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         binding.results.adapter = adapter
         binding.results.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            /** Hides the keyboard when the user starts dragging the results. */
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING) dismissKeyboard()
             }
@@ -122,11 +124,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Releases search-field focus and hides the on-screen keyboard. */
     private fun dismissKeyboard() {
         if (binding.search.hasFocus()) binding.root.requestFocus()
         WindowCompat.getInsetsController(window, binding.root).hide(WindowInsetsCompat.Type.ime())
     }
 
+    /** Starts a queued import or export when ready, returning whether an operation was started. */
     private fun consumePendingFile(): Boolean {
         if (!ready) return false
         val (uri, export) = pendingFile ?: return false
@@ -136,6 +140,17 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    /** Shows or hides the loading bar without moving the results, and sets the loading message when shown. */
+    private fun setLoading(loading: Boolean) {
+        // Reserve the bar's space so finishing a load never shifts the results.
+        binding.loadingProgress.visibility = if (loading) View.VISIBLE else View.INVISIBLE
+        if (loading) binding.status.setText(R.string.loading)
+    }
+
+    /**
+     * Waits briefly for typing to settle, then searches in the background and ignores stale results.
+     * [force] refreshes an unchanged query while preserving its scroll position.
+     */
     private fun scheduleSearch(force: Boolean = false) {
         if (!ready) return
         val query = binding.search.text.toString()
@@ -145,13 +160,14 @@ class MainActivity : AppCompatActivity() {
         val resetPosition = key != lastSearch
         lastSearch = key
         val request = ++generation
-        binding.status.setText(R.string.loading)
+        setLoading(true)
         main.postDelayed({
             if (alive && request == generation) worker.execute {
                 try {
                     val result = repository.search(query, onlySaved)
                     main.post {
                         if (alive && request == generation) {
+                            setLoading(false)
                             adapter.submitList(result.terms) {
                                 if (alive && request == generation) {
                                     val state = listState
@@ -173,6 +189,7 @@ class MainActivity : AppCompatActivity() {
         }, 150)
     }
 
+    /** Opens a term's details with actions for sources, favourites, editing, and removal. */
     private fun showTerm(term: Term) {
         if (!ready) return
         val view = DialogTermBinding.inflate(layoutInflater)
@@ -206,6 +223,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Opens the add/edit form, restores any [draft], and saves changes in the background. */
     private fun showEditor(term: Term?, draft: Bundle? = null) {
         if (!ready) return
         val form = DialogEditBinding.inflate(layoutInflater)
@@ -232,6 +250,7 @@ class MainActivity : AppCompatActivity() {
                 val notes = form.notes.text.toString()
                 val citation = form.citation.text.toString()
                 ready = false; ++generation; invalidateOptionsMenu()
+                setLoading(true)
                 dialog.setCancelable(false)
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
@@ -254,6 +273,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /** Shows selectable information in a dialog with clickable web links. */
     private fun showText(title: CharSequence, text: CharSequence) {
         val dialog = AlertDialog.Builder(this).setTitle(title).setMessage(text).setPositiveButton(R.string.close, null).show()
         dialog.findViewById<android.widget.TextView>(android.R.id.message)?.apply {
@@ -263,6 +283,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Groups a term's sources into a short list with access to each full citation. */
     private fun showSources(raw: String) {
         val groups = SourceCatalog.groups(raw)
         AlertDialog.Builder(this).setTitle(R.string.sources)
@@ -275,6 +296,7 @@ class MainActivity : AppCompatActivity() {
             }.setPositiveButton(R.string.close, null).show()
     }
 
+    /** Shows the app version, cached term count, and links to sources, credits, and help. */
     private fun showAbout() {
         worker.execute {
             val info = try { repository.info() } // Cached; no SQLite query when About opens.
@@ -308,6 +330,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Loads personal changes in the background and lists them, including removed terms. */
     private fun showChanges() {
         worker.execute {
             val changes = try { repository.personalChanges() }
@@ -325,11 +348,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Runs [action] on the database worker, then refreshes results and reports success or failure.
+     * [resetList] clears the previous collection's results and scroll position before starting.
+     */
     private fun changeData(success: Int = R.string.data_ready, resetList: Boolean = false, action: () -> Unit) {
         ready = false
         ++generation
         invalidateOptionsMenu()
-        binding.status.setText(R.string.loading)
+        setLoading(true)
         binding.results.isEnabled = false
         if (resetList) { adapter.submitList(emptyList()); lastSearch = null; listState = null }
         worker.execute {
@@ -347,12 +374,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Hides the loading bar and displays the failure in the status line and a toast. */
     private fun showError(error: Throwable) {
+        setLoading(false)
         val message = getString(R.string.operation_failed, error.message ?: error.javaClass.simpleName)
         binding.status.text = message
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    /** Adds the glossary editing, import/export, restore, and About menu items. */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menu.add(0, 4, 0, R.string.add_term)
         menu.add(0, 5, 1, R.string.my_changes)
@@ -362,10 +392,12 @@ class MainActivity : AppCompatActivity() {
         menu.add(0, 3, 5, R.string.about)
         return true
     }
+    /** Enables menu actions only when the glossary is ready. */
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         for (id in 1..6) menu.findItem(id)?.isEnabled = ready
         return super.onPrepareOptionsMenu(menu)
     }
+    /** Opens the selected glossary action or passes unhandled menu items to the activity. */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             1 -> pickDatabase.launch(arrayOf("*/*"))
@@ -378,6 +410,7 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
+    /** Saves the search, list position, pending file operation, and editor draft for screen recreation. */
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("query", binding.search.text.toString())
         outState.putBoolean("favourites", binding.favourites.isChecked)
@@ -392,6 +425,7 @@ class MainActivity : AppCompatActivity() {
         }
         super.onSaveInstanceState(outState)
     }
+    /** Cancels this screen's callbacks and closes its repository after queued database work finishes. */
     override fun onDestroy() {
         alive = false
         ++generation
