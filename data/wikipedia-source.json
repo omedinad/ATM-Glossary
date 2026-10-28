@@ -1,0 +1,33 @@
+{
+  "article": "https://en.wikipedia.org/wiki/List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations",
+  "title": "List of aviation, avionics, aerospace and aeronautical abbreviations",
+  "contributors": "https://en.wikipedia.org/wiki/List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations?action=history",
+  "permanent_link": "https://en.wikipedia.org/w/index.php?title=List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations&oldid=1369384513",
+  "revision": "1369384513",
+  "retrieved": "2026-10-27",
+  "html_sha256": "1a3c6be8d0b052376bd87f2af6634806b845eb49fb4480b2fc37cba491b037a4",
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "input_rows": 1261,
+  "entries": 1258,
+  "duplicates_consolidated": 1,
+  "skipped": [
+    {
+      "location": "section C, table 3, row 34",
+      "reason": "Missing abbreviation or meaning",
+      "values": [
+        "NUO",
+        ""
+      ]
+    },
+    {
+      "location": "section P, table 17, row 60",
+      "reason": "Missing abbreviation or meaning",
+      "values": [
+        "P-RNAV",
+        ""
+      ]
+    }
+  ],
+  "changes": "Extracted tables; removed citation markers and acronym disambiguation superscripts; normalized whitespace; consolidated identical acronym/meaning pairs, preserving notes and row references. Meanings are retained from Wikipedia, not independently verified."
+}

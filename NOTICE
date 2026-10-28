@@ -1,0 +1,36 @@
+ATM Glossary
+
+Based on Senreta Vortaro by Ian Mcxa, distributed under Apache License 2.0.
+Original project: https://github.com/ianmcxa/vortaro
+Current upstream location: https://github.com/wildeyedskies/vortaro
+Original licence: https://github.com/wildeyedskies/vortaro/blob/master/LICENSE.txt
+
+ATM Glossary adaptations (2026) by Oscar Medina Duarte: modern Android build,
+XML interface, SQLite glossary/import/export, personal editing, collection storage,
+source presentation and Python data tools. The application source, tests and build
+configuration have been modified. The original application notice is retained in
+About > Credits and labelled as historical.
+
+Code and accompanying code documentation: Apache License 2.0 (LICENSE).
+Kotlin and AndroidX dependencies: Apache License 2.0. The Gradle wrapper retains
+its own embedded Apache notices. Third-party notices must be retained when updating.
+
+Public-edition starter (not bundled in private builds): adapted from Wikipedia contributors' "List of aviation, avionics,
+aerospace and aeronautical abbreviations", revision 1369384513, retrieved 2026-10-27.
+https://en.wikipedia.org/w/index.php?title=List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations&oldid=1369384513
+Contributors/history:
+https://en.wikipedia.org/w/index.php?title=List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations&action=history
+Licensed under CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
+Changes: extracted and reformatted tables, removed citation/sense markers,
+normalized whitespace, combined identical acronym/meaning pairs, and omitted
+incomplete rows. See data/wikipedia-source.json. The CSV, its derived database and
+Wikipedia-derived documentation retain these terms; they are not public domain.
+No Wikipedia images or logos are included. No endorsement is implied.
+
+Current icon: Solar Radar 2 Bold Duotone by 480 Design, CC BY 4.0.
+https://creativecommons.org/licenses/by/4.0/
+See artwork/ATTRIBUTION.md for its source and modifications.
+
+Private-edition data is supplied locally by the builder. It retains its original
+per-entry citations and source-specific rights; no public reuse licence is granted
+by the code licence or by the public starter licence.
