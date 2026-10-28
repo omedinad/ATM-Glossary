@@ -43,13 +43,15 @@ class MainActivityTest {
     /** Gives the test screen a fixed size so list positions can be checked reliably. */
     private fun layout() {
         val root = activity.findViewById<View>(R.id.container)
-        root.measure(View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(1800, View.MeasureSpec.EXACTLY))
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(1800, View.MeasureSpec.EXACTLY),
+        )
         root.layout(0, 0, 1080, 1800)
     }
     /** Processes background and UI work until [condition] holds, failing if it takes too long. */
     private fun awaitIdle(condition: () -> Boolean = {
-        results.adapter!!.itemCount > 0 && activity.findViewById<TextView>(R.id.status).text != activity.getString(R.string.loading)
+        results.adapter!!.itemCount > 0 && (activity.findViewById<TextView>(R.id.status).text != activity.getString(R.string.loading))
     }) {
         repeat(200) {
             DatabaseWorker.executor.submit {}.get(10, TimeUnit.SECONDS)

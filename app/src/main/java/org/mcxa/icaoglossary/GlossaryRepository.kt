@@ -106,7 +106,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
                 val description = entry.get("description")
                 require(label is String && label.isNotBlank() && label.length <= 10000 &&
                     description is String && description.isNotBlank() && description.length <= 10000) { "Invalid source metadata." }
-                sources.add(SourceCatalog.Source(label as String, description as String))
+                sources.add(SourceCatalog.Source(label, description))
             }
         }
         db.rawQuery("SELECT id,abbreviation,meaning,notes,source,abbreviation_search,meaning_search FROM entries", null).use { c ->

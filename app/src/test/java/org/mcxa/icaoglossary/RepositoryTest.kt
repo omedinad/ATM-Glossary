@@ -39,10 +39,16 @@ class RepositoryTest {
             rows.forEach { (id, acronym, meaning) ->
                 db.execSQL("INSERT INTO entries VALUES (?,?,?,?,?,?,?)", arrayOf(id, acronym, meaning, "Test note", "Synthetic fixture; row $id", GlossaryRepository.normalize(acronym), GlossaryRepository.normalize(meaning)))
             }
-            mapOf("schema_version" to "1", "dataset_version" to "fixture-v1", "title" to "Test glossary", "entry_count" to rows.size.toString(),
-                "collection_id" to "synthetic-test", "entry_aliases" to "{\"retired-atc\":\"term-atc\"}",
-                "sources" to "[{\"label\":\"Test source\",\"description\":\"Synthetic examples for tests\"}]").forEach { (k,v) ->
-                db.execSQL("INSERT INTO metadata VALUES (?,?)", arrayOf(k,v))
+            mapOf(
+                "schema_version" to "1",
+                "dataset_version" to "fixture-v1",
+                "title" to "Test glossary",
+                "entry_count" to rows.size.toString(),
+                "collection_id" to "synthetic-test",
+                "entry_aliases" to "{\"retired-atc\":\"term-atc\"}",
+                "sources" to "[{\"label\":\"Test source\",\"description\":\"Synthetic examples for tests\"}]",
+            ).forEach { (k, v) ->
+                db.execSQL("INSERT INTO metadata VALUES (?,?)", arrayOf(k, v))
             }
         }
         repo.importDatabase(Uri.fromFile(fixture))
@@ -50,7 +56,7 @@ class RepositoryTest {
     /** Closes the repository after each test. */
     @After fun cleanup() { repo.close() }
     /** Finds the fixture's air traffic control entry among the distinct ATC meanings. */
-    private fun term() = repo.search("ATC", false).terms.single { it.id == "term-atc" }
+    private fun term() = repo.search("ATC", favouritesOnly = false).terms.single { it.id == "term-atc" }
     /** Copies the fixture to a fresh file and applies any requested database changes. */
     private fun copyFixture(action: (SQLiteDatabase) -> Unit = {}): File {
         val file = File(context.cacheDir, "copy-${sequence++}.db")

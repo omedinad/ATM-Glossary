@@ -7,7 +7,7 @@ object SourceCatalog {
     data class Group(val source: Source, val references: List<String>) {
         /** Shows compact Wikipedia revision references and keeps other source references in full. */
         val locations: String get() = references.joinToString("\n\n") {
-            if (it.startsWith("Wikipedia contributors;") && "; revision " in it)
+            if (it.startsWith("Wikipedia contributors;") && ("; revision " in it))
                 "Revision " + it.substringAfter("; revision ").substringBefore("; retrieved")
             else it
         }
@@ -20,8 +20,8 @@ object SourceCatalog {
         else -> Source(line.substringBefore(';').take(80), "Reference supplied with this entry. See its full citation for provenance and any reuse terms.")
     }
     /** Removes blank or repeated citation lines and groups the remaining full references by source. */
-    fun groups(raw: String): List<Group> = raw.lines().map(String::trim).filter(String::isNotEmpty)
-        .distinct().groupBy(::identify).map { (source, references) -> Group(source, references) }
+    fun groups(raw: String): List<Group> = raw.lines().asSequence().map(String::trim).filter(String::isNotEmpty)
+        .distinct().groupBy(::identify).map { (source, references) -> Group(source, references) }.toList()
     /** Lists source labels with personal changes first, showing an extra-source count beyond [limit]. */
     fun summary(raw: String, limit: Int = Int.MAX_VALUE): String {
         val sources = groups(raw).sortedByDescending { it.source.label.startsWith("Personal") }

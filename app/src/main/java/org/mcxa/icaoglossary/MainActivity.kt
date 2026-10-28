@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             pendingFile = Uri.parse(it) to savedInstanceState.getBoolean("fileExport")
         }
         setContentView(binding.root)
-        val dark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         WindowCompat.getInsetsController(window, binding.root).apply {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
@@ -82,12 +82,14 @@ class MainActivity : AppCompatActivity() {
         binding.results.layoutManager = LinearLayoutManager(this)
         adapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         binding.results.adapter = adapter
-        binding.results.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            /** Hides the keyboard when the user starts dragging the results. */
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) dismissKeyboard()
-            }
-        })
+        binding.results.addOnScrollListener(
+            object : RecyclerView.OnScrollListener() {
+                /** Hides the keyboard when the user starts dragging the results. */
+                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                    if (newState == RecyclerView.SCROLL_STATE_DRAGGING) dismissKeyboard()
+                }
+            },
+        )
         binding.results.setOnGenericMotionListener { _, event ->
             if (event.action == MotionEvent.ACTION_SCROLL) dismissKeyboard()
             false // RecyclerView still handles the wheel/trackpad event.
@@ -160,14 +162,14 @@ class MainActivity : AppCompatActivity() {
         val resetPosition = key != lastSearch
         lastSearch = key
         val request = ++generation
-        setLoading(true)
+        setLoading(loading = true)
         main.postDelayed({
             if (alive && request == generation) worker.execute {
                 try {
                     val result = repository.search(query, onlySaved)
                     main.post {
                         if (alive && request == generation) {
-                            setLoading(false)
+                            setLoading(loading = false)
                             adapter.submitList(result.terms) {
                                 if (alive && request == generation) {
                                     val state = listState
@@ -195,7 +197,7 @@ class MainActivity : AppCompatActivity() {
         val view = DialogTermBinding.inflate(layoutInflater)
         view.meaning.text = term.meaning
         view.notes.text = term.notes
-        view.notes.visibility = if (term.notes.isBlank()) android.view.View.GONE else android.view.View.VISIBLE
+        view.notes.visibility = if (term.notes.isBlank()) View.GONE else View.VISIBLE
         view.provenance.text = SourceCatalog.summary(term.source)
         val dialog = AlertDialog.Builder(this)
             .setTitle(term.abbreviation.ifBlank { term.meaning })
@@ -204,7 +206,7 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton(R.string.edit_term) { _, _ -> showEditor(term) }.create()
         view.sources.setOnClickListener { showSources(term.source) }
         view.favourite.setText(if (term.favourite) R.string.remove_favourite else R.string.save_favourite)
-        view.favourite.visibility = if (term.deleted) android.view.View.GONE else android.view.View.VISIBLE
+        view.favourite.visibility = if (term.deleted) View.GONE else View.VISIBLE
         view.favourite.setOnClickListener { dialog.dismiss(); changeData { repository.toggleFavourite(term) } }
         view.remove.setText(if (term.deleted) R.string.restore_term else R.string.remove_term)
         view.remove.setOnClickListener {
