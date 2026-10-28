@@ -38,8 +38,8 @@ repository. Missing or invalid private input fails the private build. Replace
 targets: generic `assembleRelease` / `assembleDebug` build **both** editions.
 
 Release APKs go to `app/build/outputs/apk/public/release/` or `private/release/`.
-Signed files are named `ATM-Glossary_v1.0.0.apk` and
-`ATM-Glossary-Private_v1.0.0.apk`; the version follows `versionName` in `app/build.gradle`.
+Signed files are named `ATM-Glossary_v1.0.0b.apk` and
+`ATM-Glossary-Private_v1.0.0b.apk`; the version follows `versionName` in `app/build.gradle`.
 Set `ATM_KEYSTORE`, `ATM_STORE_PASSWORD`, `ATM_KEY_ALIAS` and `ATM_KEY_PASSWORD` for
 release signing, keeping credentials outside Git. Without them, filenames have an
 `-unsigned` suffix and the APKs cannot be installed. Debug APKs have a `-debug` suffix.
@@ -55,17 +55,35 @@ Choose **⋮ → Import glossary.db** to use a compatible database (up to 64 MiB
 Imported databases stay active across app updates, including edition changes.
 Personal edits and favourites are kept by glossary collection.
 Export includes visible entries and edits, but not favourites or undo history.
-See [glossary format and tools](docs/glossaries.md).
+
+The Python tools convert between editable CSV and the app's database:
+
+```sh
+python3 tools/build_glossary.py /path/to/terms.csv --strict --output /path/to/glossary.db
+python3 tools/export_glossary.py /path/to/glossary.db --output /path/to/terms.csv
+```
+
+Both support `--check` to validate without writing their output, and `--help` for
+options. Keep private inputs and outputs outside this repository. The
+[Python tools and glossary guide](docs/glossaries.md) covers file formats,
+collection metadata, aliases, private packaging, Wikipedia extraction, and the
+shared validation/I/O modules. Wikipedia extraction requires a new output directory
+and publishes its CSV and JSON files together.
 
 ## Checks and licences
 
 ```sh
 python3 -m unittest discover -s tests -v
+python3 tools/check_public.py
 ./gradlew :app:testPublicDebugUnitTest :app:lintPublicDebug
 ```
 
 With the private database available, also run `:app:testPrivateDebugUnitTest` and
-`:app:lintPrivateDebug`. CI checks only the public edition.
+`:app:lintPrivateDebug`. Install `tools/requirements-import.txt` in a virtual
+environment to include the optional Wikipedia extraction tests; otherwise those
+tests are skipped. CI installs it and checks the public edition. `check_public.py`
+checks tracked filenames, CSV validity, duplicates, and starter attribution; it is
+not a scan of Git history or a general credential scanner.
 
 Code: [Apache 2.0](LICENSE), with original application credits in [NOTICE](NOTICE).
 Starter data: [CC BY-SA 4.0](LICENSES/cc-by-sa-4.0.txt); [source and changes](data/wikipedia-source.json).

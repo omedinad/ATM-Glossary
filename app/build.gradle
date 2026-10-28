@@ -10,8 +10,8 @@ android {
         applicationId 'org.mcxa.icaoglossary'
         minSdk 23
         targetSdk 35
-        versionCode 16
-        versionName '1.0.0'
+        versionCode 17
+        versionName '1.0.0b'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildFeatures { viewBinding true }
@@ -71,6 +71,8 @@ androidComponents {
             workingDir rootProject.projectDir
             inputs.files(rootProject.file('LICENSE'), rootProject.file('NOTICE'))
             inputs.dir rootProject.file('LICENSES')
+            // Shared rules and I/O affect both editions and must invalidate generated assets.
+            inputs.files(rootProject.file('tools/glossary_core.py'), rootProject.file('tools/glossary_io.py'))
             // Reject hand-copied databases in source sets, including after an incremental build.
             def sourceDatabases = fileTree('src') { include '**/assets/**/*.db' }
             inputs.files(sourceDatabases)
@@ -79,8 +81,7 @@ androidComponents {
             if (isPrivate) {
                 def privateDb = rootProject.file(providers.gradleProperty('privateGlossary')
                     .getOrElse('../ATM-Glossary-private.db'))
-                inputs.files(privateDb, rootProject.file('tools/prepare_private_glossary.py'),
-                    rootProject.file('tools/build_glossary.py'))
+                inputs.files(privateDb, rootProject.file('tools/prepare_private_glossary.py'))
                 commandLine python, 'tools/prepare_private_glossary.py', privateDb.absolutePath
             } else {
                 inputs.files(rootProject.file('data/terms.csv'), rootProject.file('data/dataset.json'),
