@@ -1,43 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ATM Glossary adaptations, 2026. SPDX-License-Identifier: Apache-2.0 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="org.mcxa.vortaro.MainActivity">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:minHeight="?attr/actionBarSize"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:titleTextColor="@android:color/white"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:background="?attr/colorPrimary">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_search"/>
-
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/search_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="25dp"
-            android:background="@android:color/transparent"
-            android:inputType="text"/>
-    </androidx.appcompat.widget.Toolbar>
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/word_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    android:id="@+id/container" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:focusableInTouchMode="true">
+    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" android:background="?attr/colorPrimary" android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp">
+        <androidx.appcompat.widget.AppCompatEditText android:id="@+id/search" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:minHeight="56dp" android:hint="@string/search_hint" android:inputType="text" android:maxLines="1" android:singleLine="true" android:imeOptions="actionSearch|flagNoExtractUi" android:importantForAutofill="no" />
+        <Button android:id="@+id/clear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/clear" />
+    </LinearLayout>
+    <androidx.appcompat.widget.SwitchCompat android:id="@+id/favourites" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/favourites_only" />
+    <TextView android:id="@+id/status" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:accessibilityLiveRegion="polite" android:text="@string/loading" />
+    <ProgressBar android:id="@+id/loadingProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:indeterminate="true" android:indeterminateTint="?attr/colorAccent" android:importantForAccessibility="no" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/results" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="16dp" android:scrollbars="vertical" />
 </LinearLayout>

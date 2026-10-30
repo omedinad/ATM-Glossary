@@ -1,45 +1,120 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-
+// ATM Glossary adaptations, 2026. SPDX-License-Identifier: Apache-2.0
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 android {
-    compileSdkVersion 30
-    buildToolsVersion "29.0.2"
+    namespace 'org.mcxa.icaoglossary'
+    compileSdk 35
     defaultConfig {
-        applicationId "org.mcxa.vortaro"
-        minSdkVersion 17
-        targetSdkVersion 30
-        versionCode 5
-        versionName "0.5"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables.useSupportLibrary = true
+        applicationId 'org.mcxa.icaoglossary'
+        minSdk 23
+        targetSdk 35
+        versionCode 17
+        versionName '1.0.0b'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildFeatures { viewBinding true }
+    flavorDimensions 'glossary'
+    productFlavors {
+        create('public') {
+            dimension 'glossary'
+            setDefault(true)
+        }
+        create('private') { dimension 'glossary' }
+    }
+    testOptions { unitTests.includeAndroidResources = true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    signingConfigs {
+        release {
+            def keyPath = System.getenv('ATM_KEYSTORE')
+            if (keyPath) {
+                storeFile file(keyPath)
+                storePassword System.getenv('ATM_STORE_PASSWORD')
+                keyAlias System.getenv('ATM_KEY_ALIAS')
+                keyPassword System.getenv('ATM_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
+            minifyEnabled false
+            if (System.getenv('ATM_KEYSTORE')) signingConfig signingConfigs.release
         }
     }
 }
-
+kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 } }
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.vectordrawable:vectordrawable:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    implementation 'com.google.android.material:material:1.2.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
-
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2"
-
-    testImplementation 'junit:junit:4.12'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
 }
-repositories {
-    mavenCentral()
+// Typed output lets AGP wire each generator only into its own variant.
+abstract class GlossaryAssetsTask extends Exec {
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDirectory()
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def isPrivate = variant.productFlavors.any { it.second == 'private' }
+        def taskName = "prepare${variant.name.capitalize()}Glossary"
+        def assetTask = tasks.register(taskName, GlossaryAssetsTask) {
+            workingDir rootProject.projectDir
+            inputs.files(rootProject.file('LICENSE'), rootProject.file('NOTICE'))
+            inputs.dir rootProject.file('LICENSES')
+            // Shared rules and I/O affect both editions and must invalidate generated assets.
+            inputs.files(rootProject.file('tools/glossary_core.py'), rootProject.file('tools/glossary_io.py'))
+            // Reject hand-copied databases in source sets, including after an incremental build.
+            def sourceDatabases = fileTree('src') { include '**/assets/**/*.db' }
+            inputs.files(sourceDatabases)
+            def python = providers.gradleProperty('pythonExecutable').getOrElse('python3')
+            inputs.property('pythonExecutable', python)
+            if (isPrivate) {
+                def privateDb = rootProject.file(providers.gradleProperty('privateGlossary')
+                    .getOrElse('../ATM-Glossary-private.db'))
+                inputs.files(privateDb, rootProject.file('tools/prepare_private_glossary.py'))
+                commandLine python, 'tools/prepare_private_glossary.py', privateDb.absolutePath
+            } else {
+                inputs.files(rootProject.file('data/terms.csv'), rootProject.file('data/dataset.json'),
+                    rootProject.file('tools/build_glossary.py'))
+                inputs.files(rootProject.fileTree('data') { include 'entry-aliases.json' })
+                commandLine python, 'tools/build_glossary.py', '--strict',
+                    '--title', 'Wikipedia aviation starter'
+            }
+            doFirst {
+                if (!sourceDatabases.isEmpty()) {
+                    throw new GradleException('Remove databases from src/*/assets: glossary assets are generated per variant. Keep private input outside the repository.')
+                }
+                // AGP assigns this directory when registering the generated source.
+                args '--output', outputDirectory.file('glossary.db').get().asFile.absolutePath
+            }
+            doLast {
+                copy {
+                    from rootProject.file('LICENSE')
+                    from rootProject.file('NOTICE')
+                    from rootProject.file('LICENSES')
+                    into outputDirectory.dir('licenses')
+                }
+            }
+        }
+        variant.sources.assets.addGeneratedSourceDirectory(assetTask) { it.outputDirectory }
+    }
+}
+
+// AGP 8.10 exposes APK filenames through this API; output metadata is updated too.
+android.applicationVariants.all { variant ->
+    variant.outputs.all { output ->
+        def edition = variant.flavorName == 'private' ? '-Private' : ''
+        def suffix = variant.buildType.name == 'debug' ? '-debug' : (variant.signingReady ? '' : '-unsigned')
+        output.outputFileName = "ATM-Glossary${edition}_v${variant.versionName}${suffix}.apk"
+    }
 }

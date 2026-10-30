@@ -1,23 +1,63 @@
+<!-- ATM Glossary adaptations, 2026. SPDX-License-Identifier: Apache-2.0 -->
 <resources>
-    <string name="app_name">Senreta Vortaro</string>
-    <string name="search">Search</string>
-    <string name="definition">%1$s : %2$s</string>
-    <string name="icon">Application Icon</string>
-    <string name="menu_about">About</string>
-    <string name="about_header">About Senreta Vortaro</string>
+    <string name="app_name">ATM Glossary</string>
+    <string name="search_hint">Search abbreviations or meanings</string>
+    <string name="clear">Clear</string>
+    <string name="favourites_only">Favourites only</string>
+    <string name="loading">Loading glossary…</string>
+    <string name="no_matches">No matching terms</string>
+    <string name="no_favourites">No matching favourites. Open a term to save it.</string>
+    <plurals name="results"><item quantity="one">%1$d term</item><item quantity="other">%1$d terms</item></plurals>
+    <string name="results_limited">First 200 matches — refine your search</string>
+    <string name="import_db">Import glossary.db</string>
+    <string name="restore_db">Use bundled glossary</string>
+    <string name="about">About</string>
+    <string name="close">Close</string>
+    <string name="save_favourite">Add to favourites</string>
+    <string name="remove_favourite">Remove from favourites</string>
+    <string name="saved_title">★ %1$s</string>
+    <string name="operation_failed">Could not complete the operation: %1$s</string>
+    <string name="data_ready">Glossary updated</string>
     <string name="about_contents">
-        En: Senreta Vortaro (offline dictionary) is an English-Esperanto dictionary app inspired by the
-        web page Tuja Vortaro. It is designed to be easy to use for beginners.\n\n
-
-        Senreta Vortaro was created by Zoe H. The source code is available on
-        <a href="https://github.com/zoenb/vortaro">Github</a> under the Apache2 License. The dictionary
-        data is licenced under Creative Commons.\n\n
-
-        Eo: Senreta Vortaro estas angla-Esperanta vortara aplikaĵo. La dinamika retpaĝo, Tuja Vortaro,
-        inspiris ĝin. Senreta Vortaro estas kreita por esti facile uzata de komencantoj.\n\n
-
-        Senreta Vortaro estas verko de Zoe H. La fontkodo estas havebla ĉe
-        <a href="https://github.com/zoenb/vortaro">Github</a> per la Apache2 permesilo. La vortaraj
-        dataoj estas permesitaj per Creative Commons.
+        This software is based on "Senreta Vortaro" by Ian Mcxa.<p/>
+        The source code is available on <a href="https://github.com/ianmcxa/vortaro">Github</a>
+        under the Apache2 License.<br/>
+        The dictionary data (ATM List of Acronyms LOA) is property of Thales TR6.
+        <br/>
     </string>
+    <string name="historical_credits">Original application notice (historical credits):</string>
+    <string name="about_omd">Adapted by: Oscar Medina Duarte (2026-10-28)</string>
+    <string name="current_icon_credit">Current app icon: Radar 2 Bold Duotone from Solar Icons by 480 Design, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. <a href="https://www.figma.com/community/file/1166831539721848736">Original icon set</a>. Adapted to teal on white and converted to Android vector/adaptive icon format.</string>
+    <string name="add_term">Add term</string>
+    <string name="edit_term">Edit</string>
+    <string name="remove_term">Remove term</string>
+    <string name="restore_term">Restore term</string>
+    <string name="discard_edit">Discard personal changes</string>
+    <string name="discard_help">Return this entry to the active glossary version. If it is a personal addition, it will be deleted.</string>
+    <string name="remove_help">Remove this term from your glossary? You can restore it from My changes.</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="my_changes">My changes</string>
+    <string name="no_changes">No personal changes yet. Open a term and tap Edit, or choose Add term from the menu.</string>
+    <string name="removed_prefix">"Removed: "</string>
+    <string name="export_db">Export glossary</string>
+    <string name="exported">Glossary exported</string>
+    <string name="view_sources">View sources</string>
+    <string name="sources">Sources</string>
+    <string name="sources_editions">Sources and editions</string>
+    <string name="full_citation">Full citation</string>
+    <string name="credits">Credits</string>
+    <string name="editing_backups">Editing and backups</string>
+    <string name="about_summary">Your offline reference for aviation and air traffic management.</string>
+    <string name="about_count">%1$s terms</string>
+    <string name="app_version">Version %1$s</string>
+    <string name="active_glossary">Active glossary and review</string>
+    <string name="active_glossary_body">%1$s\nDataset: %2$s\n\nSources shown here belong to the active database. Older imported databases may provide citations only in individual entries.\n\nThis is an unofficial reference. Definitions have not all been independently verified for operational use. Reuse terms are specific to each source.</string>
+    <string name="edit_help">Changes stay on this device across app and glossary updates. Original source references are preserved. Export the glossary to save a portable copy.</string>
+    <string name="abbreviation_label">Acronym or term (optional)</string>
+    <string name="meaning_label">Meaning (required)</string>
+    <string name="notes_label">Notes (optional)</string>
+    <string name="citation_label">Your reference or URL (optional)</string>
+    <string name="meaning_required">Enter a meaning</string>
+    <string name="editing_help">Open a term and tap Edit to change its acronym, meaning or notes. Add your reference if you have one. Original citations remain available under View sources; personal edits are clearly labelled.\n\nUse Add term for new entries. Removed terms and all your edits appear under My changes. Restore term undoes a removal. Discard personal changes restores the active database entry, or deletes a personal addition.\n\nChanges and favourites stay with their glossary collection and survive its updates. Use bundled glossary switches to the database packaged in this edition. Changes remain attached to their collection. Reimport your database to return to its saved changes. Older databases without a collection ID share the legacy personal collection.\n\nExport glossary saves the visible glossary, including your changes, as an importable .db file. It does not include favourites or undo history. After importing an export, those entries belong to that database. Keep an export before uninstalling: uninstalling erases local data. The app has no network permission and does not upload your glossary.</string>
 </resources>

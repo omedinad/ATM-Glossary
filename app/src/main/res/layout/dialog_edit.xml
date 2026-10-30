@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ATM Glossary adaptations, 2026. SPDX-License-Identifier: Apache-2.0 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/edit_help" android:textColor="?android:attr/textColorSecondary" android:layout_marginBottom="16dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/abbreviation" android:text="@string/abbreviation_label" />
+        <androidx.appcompat.widget.AppCompatEditText android:id="@+id/abbreviation" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:inputType="text" android:importantForAutofill="no" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:labelFor="@id/meaning" android:text="@string/meaning_label" />
+        <androidx.appcompat.widget.AppCompatEditText android:id="@+id/meaning" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="64dp" android:inputType="textCapSentences|textMultiLine" android:gravity="top" android:importantForAutofill="no" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:labelFor="@id/notes" android:text="@string/notes_label" />
+        <androidx.appcompat.widget.AppCompatEditText android:id="@+id/notes" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="96dp" android:inputType="textCapSentences|textMultiLine" android:gravity="top" android:importantForAutofill="no" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:labelFor="@id/citation" android:text="@string/citation_label" />
+        <androidx.appcompat.widget.AppCompatEditText android:id="@+id/citation" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="64dp" android:inputType="textMultiLine" android:gravity="top" android:importantForAutofill="no" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,11 @@
+{
+  "collection_id": "wikipedia-aviation-starter",
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "sources": [
+    {
+      "label": "Wikipedia aviation abbreviations",
+      "description": "Adapted from List of aviation, avionics, aerospace and aeronautical abbreviations, by Wikipedia contributors. Revision 1369384513, retrieved 2026-10-27.\n\nSource: https://en.wikipedia.org/w/index.php?title=List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations&oldid=1369384513\nContributors: https://en.wikipedia.org/wiki/List_of_aviation,_avionics,_aerospace_and_aeronautical_abbreviations?action=history\nLicence: CC BY-SA 4.0 — https://creativecommons.org/licenses/by-sa/4.0/\n\nExtracted tables; removed citation markers and acronym disambiguation superscripts; normalized whitespace; consolidated identical acronym/meaning pairs, preserving notes and row references. Meanings are retained from Wikipedia, not independently verified. The article requests additional citations. This starter is an unofficial reference, not a current operational authority."
+    }
+  ]
+}
