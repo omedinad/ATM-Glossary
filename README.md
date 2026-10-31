@@ -13,7 +13,9 @@ information are available in **About → Sources and editions**.
 ## Build
 
 Open this folder in Android Studio. Install **JDK 17**, **Android SDK 35** and
-**Build Tools 35.0.0**, plus **Python 3.9+**. Set `ANDROID_HOME` or `sdk.dir` in an
+**Build Tools 35.0.0**, plus **Python 3.9+**.
+The checked-in wrapper uses **Gradle 8.14.6** with distribution SHA-256 verification;
+the project uses **Android Gradle Plugin 8.13.2** and **Kotlin 2.2.21**. Set `ANDROID_HOME` or `sdk.dir` in an
 untracked `local.properties` file. Then run:
 
 ```sh
@@ -55,6 +57,11 @@ Choose **⋮ → Import glossary.db** to use a compatible database (up to 64 MiB
 Imported databases stay active across app updates, including edition changes.
 Personal edits and favourites are kept by glossary collection.
 Export includes visible entries and edits, but not favourites or undo history.
+On supported Android 9+ devices, device setup can transfer the active glossary,
+all collections’ personal changes and favourites, and collection preferences.
+Cloud backup is disabled, including for private imports; Android 6–8 backup is
+disabled entirely. Transfer depends on the device and setup options, so keep a
+manual export. Use the same application ID and signing key on the new device.
 
 The Python tools convert between editable CSV and the app's database:
 

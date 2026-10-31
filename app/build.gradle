@@ -4,17 +4,17 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 android {
-    namespace 'org.mcxa.icaoglossary'
-    compileSdk 35
+    namespace = 'org.mcxa.icaoglossary'
+    compileSdk = 35
     defaultConfig {
         applicationId 'org.mcxa.icaoglossary'
-        minSdk 23
-        targetSdk 35
+        minSdk = 23
+        targetSdk = 35
         versionCode 17
         versionName '1.0.0b'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
-    buildFeatures { viewBinding true }
+    buildFeatures { viewBinding = true }
     flavorDimensions 'glossary'
     productFlavors {
         create('public') {

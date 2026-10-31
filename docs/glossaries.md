@@ -334,3 +334,40 @@ generated assets. The Wikipedia extraction dependency remains optional for norma
 Android builds. Useful checks after a refactor are the full Python suite, a public
 CSV → DB → CSV → DB round trip, and both public/private Gradle asset-generation tasks
 when the private input is available. No Python command advances the Android version.
+
+## Android backup and device migration
+
+The app permits selective **device-to-device transfer**, not cloud backup. On
+supported Android 9+ devices, Android setup may transfer the database directory
+(active `glossary.db`, legacy `personal.db`, collection-specific personal databases,
+and SQLite sidecars) together with `glossary.xml` preferences. Keeping the imported
+flag alongside the active database prevents startup from replacing an imported
+collection with the bundled starter. Personal databases for inactive collections
+are retained; their original glossary must be reimported to use those changes.
+
+Other preferences, files, external storage, cache, and temporary exports are not
+selected. Import, bundled-installation, and rollback staging now use Android's
+`noBackupFilesDir`, which Android excludes from backup. Old crash leftovers from
+prior versions in the database directory are not filtered by filename. Both public
+and private editions use the same policy. Cloud backup stays disabled to avoid
+uploading private source material; Android 6–8 excludes all backup domains.
+
+Rules live in `res/xml/backup_rules.xml` (Android 6–8),
+`res/xml-v28/backup_rules.xml` (Android 9–11, device-transfer flag required), and
+`res/xml/data_extraction_rules.xml` (Android 12+). They are referenced by the
+manifest. There is no in-app backup toggle: the device setup flow and transport
+support determine availability. Keep the same app ID and signing certificate.
+Manual glossary export remains useful, but does not contain favourites or undo
+history; these are included in the personal databases during device transfer.
+
+Validation: Python tests check selection/exclusion across both rule formats;
+Robolectric simulates restoring databases and collection preferences, then checks
+that an import, edit and favourite survive repository initialization. These tests
+do not exercise an Android backup transport. Before release, transfer between two
+supported test devices using the same signed build: create a favourite and edit,
+import a synthetic glossary, transfer during setup, and verify the import stays
+active and the edit/favourite remain. Repeat with the bundled collection and
+with saved changes in an inactive collection. Check that unrelated files and
+cloud backups are excluded. Never rely on transfer as your only copy of data.
+
+Android reference: https://developer.android.com/identity/data/autobackup

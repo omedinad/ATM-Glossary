@@ -291,4 +291,27 @@ class RepositoryTest {
         assertEquals("synthetic-test",repo.info().collectionId)
         assertEquals("Personal test entry",repo.search("MYTERM",false).terms.single().meaning)
     }
+    /** Simulates restoring the selected databases and preferences before the first app launch. */
+    @Test fun transferredCollectionRetainsImportEditsAndFavourites() {
+        repo.toggleFavourite(term())
+        repo.saveEdit(term(), "MY-ATC", "Transferred meaning", "Transferred note", "Notebook")
+        val expected = repo.info()
+        repo.close()
+        val prefs = context.getSharedPreferences("glossary", Context.MODE_PRIVATE)
+        val imported = prefs.getBoolean("imported", false)
+        val hash = prefs.getString("bundleHash", null)
+        val snapshot = context.databaseList().associateWith { context.getDatabasePath(it).readBytes() }
+        snapshot.keys.forEach { context.deleteDatabase(it) }
+        prefs.edit().clear().commit()
+        snapshot.forEach { (name, bytes) -> context.getDatabasePath(name).writeBytes(bytes) }
+        prefs.edit().putBoolean("imported", imported).putString("bundleHash", hash).commit()
+        repo = GlossaryRepository(context)
+        repo.initialize()
+        assertEquals(expected, repo.info())
+        val restored = repo.search("MY-ATC", favouritesOnly = true).terms.single()
+        assertEquals("Transferred meaning", restored.meaning)
+        assertEquals("Transferred note", restored.notes)
+        assertTrue(restored.favourite)
+        assertFalse(context.databaseList().any { it.startsWith("import-") || it.startsWith("bundle-") || it.startsWith("previous-") })
+    }
 }

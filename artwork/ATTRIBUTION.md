@@ -9,8 +9,10 @@ License reference: https://github.com/saoudi-h/solar-icons/blob/main/LICENSE-THI
 Downloaded SVG: https://api.iconify.design/solar/radar-2-bold-duotone.svg
 
 Changes: applied teal (#0E7490), white background, scaling/padding, conversion to
-Android VectorDrawable and adaptive-icon resources. Original path geometry and
-50% background-circle opacity retained. The unmodified downloaded SVG is included.
+Android VectorDrawable and adaptive-icon resources. Coordinates rounded to at most three decimal places (two for the detailed radar
+path), with compact absolute/relative commands to shorten vector paths;
+50% background-circle opacity retained. Added a white alpha-mask variant for
+Android themed launcher icons, using the same geometry and padding. The unmodified downloaded SVG is included.
 
 The About dialog preserves historical application credits and separately identifies
 this current icon. The older Control tower/Flaticon credit refers to the original app.

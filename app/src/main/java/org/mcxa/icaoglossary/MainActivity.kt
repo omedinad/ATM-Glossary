@@ -21,6 +21,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.os.BundleCompat
+import androidx.core.net.toUri
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -59,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         pendingDraft = savedInstanceState?.getBundle("editor")
         listState = savedInstanceState?.let { BundleCompat.getParcelable(it, "resultsState", Parcelable::class.java) }
         savedInstanceState?.getString("fileUri")?.let {
-            pendingFile = Uri.parse(it) to savedInstanceState.getBoolean("fileExport")
+            pendingFile = it.toUri() to savedInstanceState.getBoolean("fileExport")
         }
         setContentView(binding.root)
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES

@@ -2,6 +2,7 @@
 package org.mcxa.icaoglossary
 
 import androidx.core.content.edit
+import androidx.core.database.sqlite.transaction
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -154,8 +155,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         // retain the second edit as an independent personal entry rather than losing it.
         try {
             val db = candidate.writableDatabase
-            db.beginTransaction()
-            try {
+            db.transaction {
                 for ((old, target) in validated.aliases) {
                     if (hasEdit(db, old)) {
                         val newId = if (hasEdit(db, target)) "personal-${java.util.UUID.randomUUID()}" else target
@@ -174,14 +174,13 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
                 require(count <= 100000) { "This database and your personal additions exceed the 100,000 term limit." }
                 if (replacement != null) {
                     if (destination.exists()) {
-                        backup = File.createTempFile("previous-", ".db", destination.parentFile)
+                        backup = File.createTempFile("previous-", ".db", context.noBackupFilesDir)
                         destination.copyTo(checkNotNull(backup), overwrite = true)
                     }
                     check(replacement.renameTo(destination)) { "Could not replace the glossary. Existing data is unchanged." }
                     replaced = true
                 }
-                db.setTransactionSuccessful()
-            } finally { db.endTransaction() }
+            }
         } catch (error: Exception) {
             if (replaced) {
                 val restored = backup?.renameTo(destination) ?: destination.delete()
@@ -318,8 +317,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
         try {
             destination.copyTo(temp, overwrite = true)
             SQLiteDatabase.openDatabase(temp.path, null, SQLiteDatabase.OPEN_READWRITE).use { db ->
-                db.beginTransaction()
-                try {
+                db.transaction {
                     db.delete("entries", null, null)
                     val ids = hashSetOf<String>()
                     openEffective().use { active ->
@@ -339,8 +337,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
                     metadata("dataset_version", "personal-${java.util.UUID.randomUUID()}")
                     metadata("entry_aliases", org.json.JSONObject(cachedAliases.filterValues { it in ids }).toString())
                     db.delete("metadata", "key=?", arrayOf("content_sha256")) // The Python content digest no longer applies.
-                    db.setTransactionSuccessful()
-                } finally { db.endTransaction() }
+                }
                 db.execSQL("VACUUM")
             }
             validate(temp)
@@ -359,7 +356,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
 
     /** Installs the bundled glossary and records its optional [hash] for future update checks. */
     private fun installBundle(hash: String? = null) {
-        val temp = File.createTempFile("bundle-", ".db", destination.parentFile)
+        val temp = File.createTempFile("bundle-", ".db", context.noBackupFilesDir)
         try {
             context.assets.open("glossary.db").use { input -> temp.outputStream().use { input.copyTo(it) } }
             replace(temp)
@@ -375,7 +372,7 @@ class GlossaryRepository(private val context: Context) : AutoCloseable {
 
     /** Imports a validated database up to 64 MiB and keeps it active across bundled glossary updates. */
     fun importDatabase(uri: Uri) {
-        val temp = File.createTempFile("import-", ".db", destination.parentFile)
+        val temp = File.createTempFile("import-", ".db", context.noBackupFilesDir)
         try {
             requireNotNull(context.contentResolver.openInputStream(uri)) { "Cannot open selected file." }.use { input ->
                 temp.outputStream().use { output ->

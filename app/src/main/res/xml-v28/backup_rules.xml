@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 9–11: include a consistent collection only during device transfer. -->
+<full-backup-content>
+    <include domain="database" path="." requireFlags="deviceToDeviceTransfer" />
+    <include domain="sharedpref" path="glossary.xml" requireFlags="deviceToDeviceTransfer" />
+</full-backup-content>
