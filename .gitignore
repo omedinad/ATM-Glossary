@@ -20,6 +20,9 @@ keystore.properties
 .env.*
 
 # Generated packages, databases, logs, and archives
+# Android Studio signed APK output (distinct from app/src flavour sources).
+/app/private/
+/app/public/
 *.apk
 *.aab
 *.db
