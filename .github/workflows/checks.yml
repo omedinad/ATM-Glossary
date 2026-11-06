@@ -15,6 +15,8 @@ jobs:
         with:
           python-version: '3.12'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       # Enable the optional saved-Wikipedia-HTML extractor tests as well as core tests.
       - run: python3 -m pip install -r tools/requirements-import.txt
